@@ -1,0 +1,93 @@
+# Java modules and using jlink
+
+## Create a module
+
+Modules (by convention) need to be created in a folder with the same name as the module name.
+
+For example this module:
+
+module-info.java
+```
+module sourcelabs {
+
+    exports nl.sourcelabs.labs;
+}
+```
+
+Must be created in a folder called: sourcelabs
+
+## Compile module
+
+Compiling a Java module
+
+```
+javac -d out --module-source-path src/.  $(find . -name "*.java")
+```
+
+## Run module
+
+Running a Java module
+
+```
+java --module-path out -m sourcelabs/nl.sourcelabs.labs.Main
+```
+
+## Using jlink
+
+Creating a JDK tailored for this module.
+
+```
+jlink --module-path out:/Library/Java/JavaVirtualMachines/jdk-9.0.1.jdk/Contents/Home/jmods --add-modules sourcelabs --output linkedjdk
+```
+
+Results in 38mb
+
+### Optimize
+
+We can optimize by ditching some JDK (debug) stuff that we do not need it.
+
+```
+rm -rf linkedjdk
+jlink --strip-debug --compress=2 --module-path out:/Library/Java/JavaVirtualMachines/jdk-9.0.1.jdk/Contents/Home/jmods --add-modules sourcelabs --output linkedjdk
+```
+
+Results in 22mb
+
+## List modules
+
+Lets inspect the generated JVM.
+
+```
+linkedjdk/bin/java --list-modules
+```
+
+## Run the module
+
+Run the module in the JVM.
+
+```
+linkedjdk/bin/java --module-path lib -m sourcelabs/nl.sourcelabs.labs.Main
+```
+
+## Create a launcher
+
+Would be nice if we could create a launcher for the module:
+
+```
+rm -rf linkedjdk
+jlink --strip-debug --compress=2 --module-path out:/Library/Java/JavaVirtualMachines/jdk-9.0.1.jdk/Contents/Home/jmods --add-modules sourcelabs --output linkedjdk --launcher sourcelabs=sourcelabs/nl.sourcelabs.labs.Main
+```
+
+## Run with launcher
+
+Run with the generated launcher:
+
+```
+./linkedjdk/bin/sourcelabs
+```
+
+## Links
+
+https://docs.oracle.com/javase/9/tools/jlink.htm
+https://dzone.com/articles/jlink-in-java-9
+https://www.youtube.com/watch?v=UNg9lmk60sg&feature=youtu.be&t=1h35m43s
